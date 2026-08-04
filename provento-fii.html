@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provento — Fundos Imobiliários mais rentáveis, em números</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A1526;
+    --bg-panel:#101F35;
+    --bg-panel-2:#17293F;
+    --paper:#EDE8DA;
+    --paper-ink:#20201A;
+    --ink:#EDE9DD;
+    --ink-muted:#93A0B4;
+    --gold:#C9A227;
+    --green:#4C9B76;
+    --red-neg:#C06A50;
+    --brick:#9C7A22;
+    --line:rgba(237,233,221,0.12);
+    --line-strong:rgba(237,233,221,0.22);
+    --radius:3px;
+    --serif: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono: ui-monospace,'SF Mono','Cascadia Code','Roboto Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;}
+  }
+
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- Ticker tape (signature element) ---------- */
+  .ticker-tape{
+    background:#071022;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+    height:40px;
+    display:flex;
+    align-items:center;
+  }
+  .ticker-track{
+    display:inline-flex;
+    gap:36px;
+    padding-left:100%;
+    animation:scroll-tape 42s linear infinite;
+    font-family:var(--mono);
+    font-size:12.5px;
+    letter-spacing:0.02em;
+  }
+  @keyframes scroll-tape{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-100%);}
+  }
+  .tt-item{color:var(--ink-muted);}
+  .tt-item b{color:var(--ink);font-weight:600;}
+  .tt-up{color:var(--green);}
+  .tt-down{color:var(--red-neg);}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 0;
+  }
+  .brand{
+    font-family:var(--serif);
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:0.01em;
+  }
+  .brand em{color:var(--gold);font-style:italic;}
+  nav a{
+    color:var(--ink-muted);
+    text-decoration:none;
+    font-size:14px;
+    margin-left:28px;
+  }
+  nav a:hover{color:var(--ink);}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:64px 0 56px;border-bottom:1px solid var(--line);}
+  .hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:56px;align-items:end;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:18px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--gold);}
+  h1{
+    font-family:var(--serif);
+    font-size:52px;
+    line-height:1.06;
+    font-weight:700;
+    margin:0 0 20px;
+    letter-spacing:-0.01em;
+  }
+  h1 em{font-style:italic;color:var(--gold);}
+  .hero p.lede{
+    font-size:17px;
+    color:var(--ink-muted);
+    max-width:480px;
+    margin:0 0 28px;
+  }
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--sans);
+    font-size:14.5px;
+    font-weight:600;
+    padding:13px 22px;
+    border-radius:var(--radius);
+    border:1px solid transparent;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--brick);color:#0A1526;}
+  .btn-primary:hover{background:#B58D2A;}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent;}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+  .hero-stats{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--bg-panel);
+    padding:22px;
+  }
+  .hero-stats .row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:10px 0;border-bottom:1px solid var(--line);
+    font-family:var(--mono);
+  }
+  .hero-stats .row:last-child{border-bottom:none;}
+  .hero-stats .row span:first-child{color:var(--ink-muted);font-size:13px;}
+  .hero-stats .row span:last-child{font-size:16px;font-weight:600;}
+
+  /* ---------- Section shell ---------- */
+  section{padding:64px 0;border-bottom:1px solid var(--line);}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:32px;flex-wrap:wrap;}
+  .section-head h2{
+    font-family:var(--serif);
+    font-size:32px;
+    margin:0 0 8px;
+    font-weight:700;
+  }
+  .section-head p{color:var(--ink-muted);margin:0;max-width:520px;font-size:15px;}
+
+  /* ---------- Token bar ---------- */
+  .token-bar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:28px;font-size:13.5px;
+  }
+  .token-bar input{
+    flex:1;min-width:220px;
+    background:var(--bg);border:1px solid var(--line-strong);color:var(--ink);
+    padding:9px 12px;border-radius:var(--radius);font-family:var(--mono);font-size:13px;
+  }
+  .token-bar .status{font-family:var(--mono);font-size:12px;color:var(--ink-muted);}
+  .token-bar .status.live{color:var(--green);}
+  .token-bar .status.demo{color:var(--gold);}
+  .token-bar small{color:var(--ink-muted);width:100%;display:block;margin-top:8px;}
+  .token-bar small a{color:var(--gold);text-decoration:underline;}
+
+  /* ---------- Fund table ---------- */
+  .controls{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .controls select{
+    background:var(--bg-panel);border:1px solid var(--line-strong);color:var(--ink);
+    padding:9px 12px;border-radius:var(--radius);font-size:13px;font-family:var(--sans);
+  }
+  .fund-table{width:100%;border-collapse:collapse;font-size:14px;}
+  .fund-table thead th{
+    text-align:left;font-family:var(--mono);font-size:11.5px;letter-spacing:0.06em;
+    text-transform:uppercase;color:var(--ink-muted);
+    padding:0 14px 10px;border-bottom:1px solid var(--line-strong);font-weight:500;
+  }
+  .fund-table tbody tr{
+    border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s ease;
+  }
+  .fund-table tbody tr:hover{background:var(--bg-panel);}
+  .fund-table tbody tr.selected{background:var(--bg-panel-2);}
+  .fund-table td{padding:14px;vertical-align:middle;}
+  .ticker-cell b{font-family:var(--mono);font-size:14.5px;letter-spacing:0.02em;}
+  .ticker-cell div{font-size:12.5px;color:var(--ink-muted);margin-top:2px;}
+  .tag{
+    display:inline-block;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;
+    letter-spacing:0.05em;color:var(--ink-muted);border:1px solid var(--line-strong);
+    padding:2px 7px;border-radius:2px;
+  }
+  .dy-cell{font-family:var(--mono);font-weight:700;color:var(--green);font-size:15px;}
+  .price-cell{font-family:var(--mono);}
+  .rank-badge{
+    font-family:var(--mono);font-size:11px;color:var(--gold);border:1px solid rgba(201,162,39,0.4);
+    padding:2px 6px;border-radius:2px;margin-right:8px;
+  }
+  .empty-note{color:var(--ink-muted);font-size:13.5px;padding:18px 14px;font-style:italic;}
+
+  /* ---------- Calculators ---------- */
+  .calc-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .calc-inputs{background:var(--bg-panel);padding:32px;}
+  .calc-receipt{background:var(--paper);color:var(--paper-ink);padding:32px;}
+  @media (max-width:820px){.calc-grid{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-muted);margin-bottom:7px;font-family:var(--mono);letter-spacing:0.03em;}
+  .field input[type=number], .field input[type=text], .field select{
+    width:100%;background:var(--bg);border:1px solid var(--line-strong);color:var(--ink);
+    padding:11px 12px;border-radius:var(--radius);font-family:var(--mono);font-size:15px;
+  }
+  .field-inline{display:flex;align-items:center;gap:10px;}
+  .field-inline input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);}
+  .field-inline label{margin:0;font-family:var(--sans);color:var(--ink);font-size:14px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+  .receipt-title{
+    font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:0.1em;
+    border-bottom:1px dashed rgba(32,32,26,0.3);padding-bottom:14px;margin-bottom:18px;
+    display:flex;justify-content:space-between;
+  }
+  .receipt-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed rgba(32,32,26,0.18);font-size:14.5px;}
+  .receipt-row span:last-child{font-family:var(--mono);font-weight:600;}
+  .receipt-row.total{border-bottom:none;margin-top:6px;padding-top:16px;border-top:1px solid rgba(32,32,26,0.4);}
+  .receipt-row.total span:last-child{font-size:22px;font-family:var(--serif);font-weight:700;}
+  .receipt-foot{margin-top:18px;font-size:12px;color:#5b5a4e;font-style:italic;}
+
+  .chart-panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;margin-top:24px;}
+  .chart-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px;}
+  .chart-summary div{border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .chart-summary .label{font-family:var(--mono);font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.05em;}
+  .chart-summary .value{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:6px;}
+  @media (max-width:700px){.chart-summary{grid-template-columns:1fr;}}
+
+  /* ---------- Final CTA ---------- */
+  .final-cta{background:var(--bg-panel-2);border:1px solid var(--line-strong);border-radius:var(--radius);padding:44px;position:relative;}
+  .final-cta::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--brick);}
+  .final-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  @media (max-width:800px){.final-grid{grid-template-columns:1fr;}}
+  .final-cta h2{font-family:var(--serif);font-size:30px;margin:0 0 14px;}
+  .final-cta p{color:var(--ink-muted);font-size:15px;margin:0 0 0;}
+  .lead-form .field label{color:var(--ink-muted);}
+  .lead-form input{width:100%;background:var(--bg);border:1px solid var(--line-strong);color:var(--ink);
+    padding:12px;border-radius:var(--radius);font-size:14px;margin-bottom:12px;font-family:var(--sans);}
+  .lead-success{display:none;border:1px solid rgba(76,155,118,0.4);background:rgba(76,155,118,0.08);
+    color:var(--green);padding:14px;border-radius:var(--radius);font-size:14px;margin-top:8px;}
+
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .step{padding:28px 24px;border-right:1px solid var(--line);position:relative;}
+  .step:last-child{border-right:none;}
+  .step-num{font-family:var(--mono);font-size:13px;color:var(--gold);letter-spacing:0.06em;margin-bottom:14px;}
+  .step h3{font-family:var(--serif);font-size:18px;margin:0 0 10px;font-weight:700;line-height:1.25;}
+  .step h3 span{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-muted);display:block;margin-top:2px;}
+  .step p{font-size:13.5px;color:var(--ink-muted);margin:0;}
+  @media (max-width:900px){
+    .steps{grid-template-columns:1fr;}
+    .step{border-right:none;border-bottom:1px solid var(--line);}
+    .step:last-child{border-bottom:none;}
+  }
+
+  footer{padding:36px 0 60px;}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;color:var(--ink-muted);font-size:12.5px;}
+  footer .disclaimer{max-width:640px;}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr;}
+    h1{font-size:38px;}
+    .fund-table{font-size:12.5px;}
+    .fund-table thead th:nth-child(4), .fund-table td:nth-child(4){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker-tape">
+  <div class="ticker-track" id="tickerTrack">
+    <span class="tt-item">carregando cotações…</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">Prov<em>ento</em></div>
+    <nav>
+      <a href="#fundos">Fundos</a>
+      <a href="#calculadora">Calculadora</a>
+      <a href="#longo-prazo">Longo prazo</a>
+    </nav>
+  </header>
+
+  <section class="hero" style="border-top:none;">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Fundos imobiliários · B3</div>
+        <h1>Seus <em>proventos</em>, antes de você investir um centavo.</h1>
+        <p class="lede">Compare os FIIs mais rentáveis do mercado agora, e simule exatamente quanto sua renda passiva pode render em 1, 5 ou 20 anos — com números, não promessas.</p>
+        <div class="cta-row">
+          <a href="#fundos" class="btn btn-primary">Ver fundos mais rentáveis →</a>
+          <a href="#calculadora" class="btn btn-ghost">Simular meu retorno</a>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="row"><span>Fundos monitorados</span><span id="statTotal">—</span></div>
+        <div class="row"><span>DY médio (12m)</span><span id="statDyMedio">—</span></div>
+        <div class="row"><span>Melhor DY do dia</span><span id="statDyTop">—</span></div>
+        <div class="row"><span>Atualizado</span><span id="statHora">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fundos">
+    <div class="section-head">
+      <div>
+        <h2>Os fundos mais rentáveis agora</h2>
+        <p>Ranking por dividend yield (DY) dos últimos 12 meses. Clique em um fundo para levá-lo direto para a calculadora.</p>
+      </div>
+    </div>
+
+    <div class="token-bar">
+      <span class="status" id="tokenStatus">● modo demonstração</span>
+      <input type="text" id="tokenInput" placeholder="cole seu token gratuito da brapi.dev para ver dados ao vivo">
+      <button class="btn btn-ghost" id="tokenBtn" style="padding:9px 16px;">Conectar</button>
+      <small>O token é gratuito em <a href="https://brapi.dev/dashboard" target="_blank" rel="noopener">brapi.dev/dashboard</a> e fica apenas no seu navegador — nunca é enviado a nenhum outro servidor além da própria brapi.</small>
+    </div>
+
+    <div class="controls">
+      <select id="sortSelect">
+        <option value="dy">Ordenar por DY (maior primeiro)</option>
+        <option value="price">Ordenar por cotação</option>
+        <option value="name">Ordenar por nome</option>
+      </select>
+      <select id="typeSelect">
+        <option value="all">Todos os segmentos</option>
+        <option value="tijolo">Tijolo</option>
+        <option value="papel">Papel / recebíveis</option>
+      </select>
+    </div>
+
+    <table class="fund-table">
+      <thead>
+        <tr>
+          <th>Fundo</th>
+          <th>Segmento</th>
+          <th>DY (12m)</th>
+          <th>Cotação</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="fundTableBody">
+        <tr><td colspan="5" class="empty-note">Carregando fundos…</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="calculadora">
+    <div class="section-head">
+      <div>
+        <h2>Calculadora de retorno</h2>
+        <p>Informe um valor e um prazo para ver quanto você recebe em proventos e qual seria seu patrimônio ao final do período.</p>
+      </div>
+    </div>
+
+    <div class="calc-grid">
+      <div class="calc-inputs">
+        <div class="field">
+          <label for="calcFundo">Fundo selecionado</label>
+          <select id="calcFundo"><option value="">— manual —</option></select>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="calcValor">Valor investido (R$)</label>
+            <input type="number" id="calcValor" value="10000" min="0" step="100">
+          </div>
+          <div class="field">
+            <label for="calcDy">DY mensal (%)</label>
+            <input type="number" id="calcDy" value="0.75" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="field">
+          <label for="calcPrazo">Prazo (meses): <span id="calcPrazoValor">24</span></label>
+          <input type="range" id="calcPrazo" min="1" max="360" value="24" style="width:100%;accent-color:var(--gold);">
+        </div>
+        <div class="field field-inline">
+          <input type="checkbox" id="calcReinvest" checked>
+          <label for="calcReinvest">Reinvestir os proventos recebidos todo mês</label>
+        </div>
+      </div>
+      <div class="calc-receipt">
+        <div class="receipt-title"><span>Simulação</span><span id="receiptFundo">manual</span></div>
+        <div class="receipt-row"><span>Valor investido</span><span id="outInvestido">R$ 0</span></div>
+        <div class="receipt-row"><span>Renda média mensal</span><span id="outRendaMensal">R$ 0</span></div>
+        <div class="receipt-row"><span>Total em proventos no período</span><span id="outProventos">R$ 0</span></div>
+        <div class="receipt-row total"><span>Patrimônio estimado ao final</span><span id="outPatrimonio">R$ 0</span></div>
+        <div class="receipt-foot">Retorno total de <span id="outRetornoPct">0%</span> sobre o valor investido, em <span id="outPrazoTexto">24 meses</span>.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="longo-prazo">
+    <div class="section-head">
+      <div>
+        <h2>Simulação de longo prazo</h2>
+        <p>Aportes mensais recorrentes, com os proventos reinvestidos automaticamente. É assim que a renda passiva composta se acumula.</p>
+      </div>
+    </div>
+
+    <div class="calc-inputs" style="border:1px solid var(--line);border-radius:var(--radius);">
+      <div class="two-col">
+        <div class="field">
+          <label for="ltInicial">Valor inicial (R$)</label>
+          <input type="number" id="ltInicial" value="5000" min="0" step="100">
+        </div>
+        <div class="field">
+          <label for="ltAporte">Aporte mensal (R$)</label>
+          <input type="number" id="ltAporte" value="500" min="0" step="50">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="ltTaxa">DY anual esperado (%)</label>
+          <input type="number" id="ltTaxa" value="9" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label for="ltAnos">Prazo (anos): <span id="ltAnosValor">15</span></label>
+          <input type="range" id="ltAnos" min="1" max="35" value="15" style="width:100%;accent-color:var(--gold);margin-top:12px;">
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <canvas id="ltChart" height="110"></canvas>
+      <div class="chart-summary">
+        <div><div class="label">Total aportado</div><div class="value" id="ltTotalAportado">R$ 0</div></div>
+        <div><div class="label">Proventos compostos</div><div class="value" id="ltTotalProventos">R$ 0</div></div>
+        <div><div class="label">Patrimônio final</div><div class="value" id="ltPatrimonioFinal">R$ 0</div></div>
+      </div>
+      <div class="chart-summary" style="grid-template-columns:1fr;margin-top:12px;">
+        <div><div class="label">Renda passiva mensal estimada ao final do período</div><div class="value" id="ltRendaFinal">R$ 0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-usar" style="border-bottom:none;">
+    <div class="section-head">
+      <div>
+        <h2>Como usar o Provento</h2>
+        <p>Do ranking de fundos até a projeção de longo prazo, em quatro passos.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Conecte um token gratuito <span>(opcional)</span></h3>
+        <p>Cole um token da brapi.dev na barra logo acima da tabela de fundos para ver DY e cotações ao vivo. Sem token, a página já funciona com dados de demonstração.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Escolha um fundo no ranking</h3>
+        <p>Na seção "Os fundos mais rentáveis agora", ordene por DY, cotação ou nome, filtre por tijolo ou papel e clique na linha do fundo que te interessa.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Simule o retorno</h3>
+        <p>Clicar no fundo já leva você até a calculadora, com o DY mensal preenchido. Ajuste o valor investido, o prazo em meses e decida se quer reinvestir os proventos recebidos.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Projete o longo prazo</h3>
+        <p>Em "Simulação de longo prazo", informe valor inicial, aporte mensal e prazo em anos para ver o gráfico de patrimônio acumulado com juros compostos e a renda passiva estimada ao final.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="font-size:16px;">Prov<em>ento</em></div>
+    <div class="disclaimer">Conteúdo educacional e ilustrativo, não constitui recomendação de investimento. Rentabilidade passada não garante rentabilidade futura. Fundos imobiliários envolvem risco de mercado, vacância e crédito. Consulte um profissional certificado antes de investir.</div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   PROVENTO — dados de FIIs via brapi.dev (https://brapi.dev)
+   O endpoint /api/quote/list exige um token gratuito (brapi.dev/dashboard).
+   Sem token válido, o site roda com dados de demonstração (ilustrativos)
+   claramente sinalizados na interface.
+   ========================================================================= */
+
+const API_BASE = 'https://brapi.dev/api';
+let API_TOKEN = '';
+
+// --- Dados de demonstração (usados até um token válido ser conectado) ---
+const MOCK_FUNDS = [
+  { ticker:'MXRF11', name:'Maxi Renda',            sector:'papel',  close:10.28, dy:12.4 },
+  { ticker:'RECR11', name:'REC Recebíveis Imob.',  sector:'papel',  close:87.40, dy:12.8 },
+  { ticker:'VGIP11', name:'Valora RE III',          sector:'papel',  close:8.71,  dy:13.1 },
+  { ticker:'KNCR11', name:'Kinea Rendimentos',      sector:'papel',  close:101.85,dy:11.2 },
+  { ticker:'HGLG11', name:'CSHG Logística',         sector:'tijolo', close:158.30,dy:8.1  },
+  { ticker:'BTLG11', name:'BTG Pactual Logística',  sector:'tijolo', close:99.42, dy:8.9  },
+  { ticker:'XPML11', name:'XP Malls',               sector:'tijolo', close:101.15,dy:8.3  },
+  { ticker:'HGRU11', name:'CSHG Renda Urbana',      sector:'tijolo', close:118.40,dy:8.5  },
+  { ticker:'VISC11', name:'Vinci Shopping Centers', sector:'tijolo', close:112.70,dy:7.9  },
+  { ticker:'KNRI11', name:'Kinea Renda Imobiliária',sector:'tijolo', close:148.55,dy:7.6  },
+];
+
+let currentFunds = [];
+let usingLiveData = false;
+
+function fmtBRL(v){
+  return (isFinite(v)?v:0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2});
+}
+function fmtPct(v){ return (isFinite(v)?v:0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%'; }
+
+// --- Busca dados reais na brapi.dev, com fallback para MOCK_FUNDS ---
+async function carregarFundos(){
+  const tbody = document.getElementById('fundTableBody');
+  const tokenStatus = document.getElementById('tokenStatus');
+
+  if(!API_TOKEN){
+    currentFunds = MOCK_FUNDS.slice();
+    usingLiveData = false;
+    tokenStatus.textContent = '● modo demonstração — conecte um token para dados ao vivo';
+    tokenStatus.className = 'status demo';
+    renderTudo();
+    return;
+  }
+
+  tokenStatus.textContent = '● conectando…';
+  try{
+    const listUrl = `${API_BASE}/quote/list?type=fund&sortBy=volume&sortOrder=desc&limit=20&token=${encodeURIComponent(API_TOKEN)}`;
+    const listRes = await fetch(listUrl);
+    if(!listRes.ok) throw new Error('Falha ao listar fundos ('+listRes.status+')');
+    const listData = await listRes.json();
+    const tickers = (listData.stocks||[]).map(f=>f.stock).slice(0,15);
+    if(tickers.length===0) throw new Error('Nenhum fundo retornado');
+
+    const quoteUrl = `${API_BASE}/quote/${tickers.join(',')}?dividends=true&token=${encodeURIComponent(API_TOKEN)}`;
+    const quoteRes = await fetch(quoteUrl);
+    if(!quoteRes.ok) throw new Error('Falha ao buscar cotações ('+quoteRes.status+')');
+    const quoteData = await quoteRes.json();
+
+    const oneYearAgo = Date.now() - 365*24*60*60*1000;
+    currentFunds = (quoteData.results||[]).map(r=>{
+      const divs = (r.dividendsData && r.dividendsData.cashDividends) || [];
+      const soma12m = divs.reduce((acc,d)=>{
+        const dt = d.paymentDate ? new Date(d.paymentDate).getTime() : 0;
+        const rate = Number(d.rate)||0;
+        return dt>=oneYearAgo ? acc+rate : acc;
+      },0);
+      const close = Number(r.regularMarketPrice ?? r.close) || 0;
+      const dy = close>0 ? (soma12m/close)*100 : 0;
+      return {
+        ticker:r.symbol||r.stock,
+        name:r.shortName||r.longName||r.symbol,
+        sector: guessSector(r.sector||''),
+        close,
+        dy: Number(dy.toFixed(2))
+      };
+    }).filter(f=>f.close>0);
+
+    if(currentFunds.length===0) throw new Error('Sem dados de dividendos suficientes');
+
+    usingLiveData = true;
+    tokenStatus.textContent = '● dados ao vivo — brapi.dev';
+    tokenStatus.className = 'status live';
+  }catch(err){
+    console.error(err);
+    currentFunds = MOCK_FUNDS.slice();
+    usingLiveData = false;
+    tokenStatus.textContent = '● token inválido ou indisponível — usando dados de demonstração';
+    tokenStatus.className = 'status demo';
+  }
+  renderTudo();
+}
+
+function guessSector(raw){
+  const s = (raw||'').toLowerCase();
+  if(s.includes('papel') || s.includes('recebí') || s.includes('cri') || s.includes('financ')) return 'papel';
+  return 'tijolo';
+}
+
+let selectedTicker = null;
+
+function renderTudo(){
+  renderTicker();
+  renderStats();
+  renderTabela();
+  renderCalcFundoOptions();
+}
+
+function renderTicker(){
+  const track = document.getElementById('tickerTrack');
+  const items = currentFunds.slice(0,12).map(f=>{
+    const cls = f.dy>=9 ? 'tt-up' : 'tt-down';
+    return `<span class="tt-item"><b>${f.ticker}</b> DY ${fmtPct(f.dy)} <span class="${cls}">●</span></span>`;
+  }).join('');
+  track.innerHTML = items + items; // duplicado para loop contínuo
+}
+
+function renderStats(){
+  const total = currentFunds.length;
+  const dyMedio = total? currentFunds.reduce((a,f)=>a+f.dy,0)/total : 0;
+  const dyTop = total? Math.max(...currentFunds.map(f=>f.dy)) : 0;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDyMedio').textContent = fmtPct(dyMedio);
+  document.getElementById('statDyTop').textContent = fmtPct(dyTop);
+  document.getElementById('statHora').textContent = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderTabela(){
+  const tbody = document.getElementById('fundTableBody');
+  const sortBy = document.getElementById('sortSelect').value;
+  const typeFilter = document.getElementById('typeSelect').value;
+
+  let list = currentFunds.filter(f => typeFilter==='all' || f.sector===typeFilter);
+  list = list.sort((a,b)=>{
+    if(sortBy==='dy') return b.dy-a.dy;
+    if(sortBy==='price') return a.close-b.close;
+    return a.name.localeCompare(b.name);
+  });
+
+  if(list.length===0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Nenhum fundo encontrado para esse filtro.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map((f,i)=>{
+    const badge = sortBy==='dy' && i<3 ? `<span class="rank-badge">TOP ${i+1}</span>` : '';
+    const selectedClass = f.ticker===selectedTicker ? 'selected' : '';
+    return `
+      <tr class="${selectedClass}" data-ticker="${f.ticker}">
+        <td class="ticker-cell">${badge}<b>${f.ticker}</b><div>${f.name}</div></td>
+        <td><span class="tag">${f.sector}</span></td>
+        <td class="dy-cell">${fmtPct(f.dy)}</td>
+        <td class="price-cell">${fmtBRL(f.close)}</td>
+        <td style="text-align:right;color:var(--ink-muted);font-size:13px;">simular →</td>
+      </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr[data-ticker]').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      selectedTicker = tr.getAttribute('data-ticker');
+      document.getElementById('calcFundo').value = selectedTicker;
+      aplicarFundoSelecionado();
+      renderTabela();
+      document.getElementById('calculadora').scrollIntoView({behavior:'smooth'});
+    });
+  });
+}
+
+function renderCalcFundoOptions(){
+  const sel = document.getElementById('calcFundo');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— manual —</option>' +
+    currentFunds.map(f=>`<option value="${f.ticker}">${f.ticker} · DY ${fmtPct(f.dy)}</option>`).join('');
+  sel.value = current || '';
+}
+
+function aplicarFundoSelecionado(){
+  const ticker = document.getElementById('calcFundo').value;
+  const fundo = currentFunds.find(f=>f.ticker===ticker);
+  if(fundo){
+    document.getElementById('calcDy').value = (fundo.dy/12).toFixed(2);
+    document.getElementById('receiptFundo').textContent = fundo.ticker;
+    document.getElementById('ltTaxa').value = fundo.dy.toFixed(1);
+  } else {
+    document.getElementById('receiptFundo').textContent = 'manual';
+  }
+  calcularRetorno();
+  calcularLongoPrazo();
+}
+
+/* ---------------- Calculadora simples de retorno ---------------- */
+function calcularRetorno(){
+  const valor = Number(document.getElementById('calcValor').value)||0;
+  const dyMensal = (Number(document.getElementById('calcDy').value)||0)/100;
+  const prazo = Number(document.getElementById('calcPrazo').value)||0;
+  const reinvest = document.getElementById('calcReinvest').checked;
+
+  document.getElementById('calcPrazoValor').textContent = prazo;
+
+  let saldo = valor;
+  let totalProventos = 0;
+  for(let m=0;m<prazo;m++){
+    const provento = saldo*dyMensal;
+    totalProventos += provento;
+    if(reinvest) saldo += provento;
+  }
+  const patrimonioFinal = reinvest ? saldo : valor + totalProventos;
+  const rendaMediaMensal = prazo>0 ? totalProventos/prazo : 0;
+  const retornoPct = valor>0 ? ((patrimonioFinal-valor)/valor)*100 : 0;
+
+  document.getElementById('outInvestido').textContent = fmtBRL(valor);
+  document.getElementById('outRendaMensal').textContent = fmtBRL(rendaMediaMensal);
+  document.getElementById('outProventos').textContent = fmtBRL(totalProventos);
+  document.getElementById('outPatrimonio').textContent = fmtBRL(patrimonioFinal);
+  document.getElementById('outRetornoPct').textContent = fmtPct(retornoPct);
+  document.getElementById('outPrazoTexto').textContent = prazo+' meses';
+}
+
+/* ---------------- Simulador de longo prazo ---------------- */
+let ltChartInstance = null;
+
+function calcularLongoPrazo(){
+  const inicial = Number(document.getElementById('ltInicial').value)||0;
+  const aporte = Number(document.getElementById('ltAporte').value)||0;
+  const taxaAnual = (Number(document.getElementById('ltTaxa').value)||0)/100;
+  const anos = Number(document.getElementById('ltAnos').value)||1;
+  const taxaMensal = taxaAnual/12;
+
+  document.getElementById('ltAnosValor').textContent = anos;
+
+  const meses = anos*12;
+  let saldo = inicial;
+  let totalAportado = inicial;
+  const pontosPatrimonio = [saldo];
+  const pontosAportado = [totalAportado];
+  const labels = ['0'];
+
+  for(let m=1;m<=meses;m++){
+    const provento = saldo*taxaMensal;
+    saldo += provento + aporte;
+    totalAportado += aporte;
+    if(m % 12===0 || m===meses){
+      pontosPatrimonio.push(saldo);
+      pontosAportado.push(totalAportado);
+      labels.push('Ano '+Math.ceil(m/12));
+    }
+  }
+
+  const totalProventos = saldo-totalAportado;
+  const rendaFinal = saldo*taxaMensal;
+
+  document.getElementById('ltTotalAportado').textContent = fmtBRL(totalAportado);
+  document.getElementById('ltTotalProventos').textContent = fmtBRL(totalProventos);
+  document.getElementById('ltPatrimonioFinal').textContent = fmtBRL(saldo);
+  document.getElementById('ltRendaFinal').textContent = fmtBRL(rendaFinal);
+
+  const ctx = document.getElementById('ltChart').getContext('2d');
+  if(ltChartInstance) ltChartInstance.destroy();
+  ltChartInstance = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Patrimônio total',
+          data:pontosPatrimonio,
+          borderColor:'#C9A227',
+          backgroundColor:'rgba(201,162,39,0.12)',
+          fill:true,
+          tension:0.25,
+          pointRadius:2,
+        },
+        {
+          label:'Total aportado',
+          data:pontosAportado,
+          borderColor:'#93A0B4',
+          borderDash:[4,4],
+          backgroundColor:'transparent',
+          fill:false,
+          tension:0.25,
+          pointRadius:0,
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{labels:{color:'#EDE9DD',font:{family:'ui-monospace,monospace',size:11}}},
+        tooltip:{callbacks:{label:(c)=> c.dataset.label+': '+fmtBRL(c.parsed.y)}}
+      },
+      scales:{
+        x:{ticks:{color:'#93A0B4',font:{size:11}},grid:{color:'rgba(237,233,221,0.06)'}},
+        y:{ticks:{color:'#93A0B4',font:{size:11},callback:(v)=>'R$ '+(v/1000).toFixed(0)+'k'},grid:{color:'rgba(237,233,221,0.06)'}}
+      }
+    }
+  });
+}
+
+/* ---------------- Eventos ---------------- */
+document.getElementById('tokenBtn').addEventListener('click', ()=>{
+  API_TOKEN = document.getElementById('tokenInput').value.trim();
+  carregarFundos();
+});
+document.getElementById('sortSelect').addEventListener('change', renderTabela);
+document.getElementById('typeSelect').addEventListener('change', renderTabela);
+document.getElementById('calcFundo').addEventListener('change', aplicarFundoSelecionado);
+['calcValor','calcDy','calcReinvest'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', calcularRetorno);
+});
+document.getElementById('calcPrazo').addEventListener('input', calcularRetorno);
+['ltInicial','ltAporte','ltTaxa'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', calcularLongoPrazo);
+});
+document.getElementById('ltAnos').addEventListener('input', calcularLongoPrazo);
+
+/* ---------------- Inicialização ---------------- */
+carregarFundos();
+calcularRetorno();
+</script>
+</body>
+</html>
