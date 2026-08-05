@@ -1,7 +1,7 @@
 # Provento — Fundos Imobiliários mais rentáveis
 
 Mini página de conversão sobre Fundos de Investimento Imobiliário (FIIs), com ranking de fundos, calculadora de retorno e simulador de longo prazo. Feita em HTML, CSS e JavaScript puros, em um único arquivo.
-
+# link: https://fundosimobiliario.vercel.app/
 ## Funcionalidades
 
 - **Ranking de fundos**: lista os FIIs do mercado, ordenável por DY (dividend yield), cotação ou nome, com filtro por segmento (tijolo / papel).
